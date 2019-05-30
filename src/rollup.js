@@ -5,8 +5,9 @@ const yParser = require('yargs-parser');
 const rollup = require('rollup');
 const assert = require('assert');
 const { existsSync, readdirSync } = require('fs');
-const { join } = require('path');
+const { join, extname } = require('path');
 const nodeResolve = require('rollup-plugin-node-resolve');
+const typescript = require('rollup-plugin-typescript2');
 const commonjs = require('rollup-plugin-commonjs');
 const replace = require('rollup-plugin-replace');
 const postcss = require('rollup-plugin-postcss');
@@ -24,7 +25,7 @@ function build(dir, opts = {}) {
     const pkgPath = join(cwd, dir, 'package.json');
     assert(existsSync(pkgPath), 'package.json should exist');
 
-    const inputOptions = {
+    const inputOptions =  isTS => ({
         external: ['react', 'react-dom', ...Object.keys(global)],
         plugins: [
             nodeResolve({
@@ -33,12 +34,13 @@ function build(dir, opts = {}) {
             replace({
                 'process.env.NODE_ENV': JSON.stringify(env),
             }),
+            ...(isTS ? [typescript()] : []),
             commonjs(),
             postcss({
                 extract: true
             }),
         ]
-    }
+    })
 
     const outputOptions = {
         format: 'umd',
@@ -56,14 +58,15 @@ function build(dir, opts = {}) {
     async function transform() {
         for (let rollupFile of rollupFiles) { // 每个文件都要走一遍rollup
             const [file, config = {}] = rollupFile;
+            const isTS = ['.ts'].includes(extname(file));
             log.info(`build ${file}`);
             const input = {
-                ...inputOptions,
+                ...inputOptions(isTS),
                 input: join(dir, file)
             };
             const output = {
                 ...outputOptions,
-                file: join(dir, file.replace(/\.js$/, '.umd.js')),
+                file: join(dir, file.replace(/\.(js|ts)$/, '.umd.js')),
                 name: config.name,
             }
             if (watch) {
