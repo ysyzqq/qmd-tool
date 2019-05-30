@@ -38,7 +38,8 @@ function getBabelConfig(isBrowser) {
                   ...(isBrowser ? { modules: false } : {}),
                 },
             ],
-            ...(isBrowser ? [require.resolve('@babel/preset-react')] : []), // 浏览器环境加入react预设
+            require.resolve('@babel/preset-react')
+            // ...(isBrowser ? [require.resolve('@babel/preset-react')] : []), // 浏览器环境加入react预设
         ],
         plugins: [
             require.resolve('@babel/plugin-proposal-export-default-from'),
@@ -63,7 +64,7 @@ function transform(opts = {}) {
     assert(path, `opts.path should be supplied for transform()`);
     assert(pkg, `opts.pkg should be supplied for transform()`);
     assert(root, `opts.root should be supplied for transform()`);
-    assert(['.js', '.ts'].includes(extname(path)), `extname of opts.path should be .js, .ts or .tsx`);
+    assert(['.js', '.ts', 'tsx'].includes(extname(path)), `extname of opts.path should be .js, .ts or .tsx`);
     
     // 根据包里的package.json里的qmdTool配置来判断是不是浏览器环境
     const { browserFiles } = pkg.qmdTool || {};
@@ -117,7 +118,7 @@ function build(dir, opts = {}) {
         )
         .pipe(
             through.obj((f, env, cb) => { // f是可读流输出的object stream
-                if (['js', 'ts'].includes(extname(f.path)) && !f.path.includes(`${sep}templates${sep}`)) { // 找到js和ts文件
+                if (['js', 'ts', 'tsx'].includes(extname(f.path)) && !f.path.includes(`${sep}templates${sep}`)) { // 找到js和ts文件
                     f.contents = Buffer.from(
                         transform({
                             content: f.contents,
