@@ -14,6 +14,7 @@ const rimraf = require('rimraf');
 const vfs = require('vinyl-fs');
 const through = require('through2');
 const chokidar = require('chokidar');
+const isLerna = require('./utils/isLerna');
 
 const cwd = process.cwd(); // 获取cwd
 let pkgCount = null;
@@ -47,13 +48,6 @@ function getBabelConfig(isBrowser) {
     }
 }
 
-/**
- * 判断是否是lerna项目
- * @param {*} cwd 
- */
-function isLerna(cwd) {
-    return existsSync(join(cwd, 'lerna.json'))
-}
 
 function addLastSlash(path) {
     return path.slice(-1) === '/' ? path : `${path}/`;
