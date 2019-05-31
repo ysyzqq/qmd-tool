@@ -25,31 +25,42 @@ function build(dir, opts = {}) {
     const pkgPath = join(cwd, dir, 'package.json');
     assert(existsSync(pkgPath), 'package.json should exist');
 
-    const inputOptions =  isTS => ({
-        external: ['react', 'react-dom', ...Object.keys(global)],
-        plugins: [
-            nodeResolve({
-                jsnext: true,
-            }),
-            replace({
-                'process.env.NODE_ENV': JSON.stringify(env),
-            }),
-            ...(isTS ? [typescript()] : []),
-            commonjs(),
-            postcss({
-                extract: true
-            }),
-        ]
-    })
+    const inputOptions =  rollupFile => {
+        const [file, config = {}] = rollupFile;
+        const isTS = ['.ts'].includes(extname(file));
+        const {commonjs = {}} = config; // 这里有时候会出现cjs解析错误,得自己定义commonjs插件的namedExports
+        return {
+            external: ['react', 'react-dom', ...Object.keys(globals)],
+            plugins: [
+                nodeResolve({
+                    jsnext: true,
+                }),
+                replace({
+                    'process.env.NODE_ENV': JSON.stringify(env),
+                }),
+                ...(isTS ? [typescript()] : []),
+                commonjs(commonjs),
+                postcss({
+                    extract: true
+                }),
+            ],
+            input: join(dir, file)
+        }
+    }
 
-    const outputOptions = {
-        format: 'umd',
-        extend: true,
-        globals: {
-          'react': 'React',
-          'react-dom': 'ReactDOM',
-          ...globals,
-        },    
+    const outputOptions = rollupFile => {
+        const [file, config = {}] = rollupFile;
+        return {
+            format: 'umd',
+            extend: true,
+            file: join(dir, file.replace(/\.(js|ts)$/, '.umd.js')),
+            name: config.name,
+            globals: {
+              'react': 'React',
+              'react-dom': 'ReactDOM',
+              ...globals,
+            },        
+        }
     }
 
     const pkg = require(pkgPath);
@@ -58,16 +69,12 @@ function build(dir, opts = {}) {
     async function transform() {
         for (let rollupFile of rollupFiles) { // 每个文件都要走一遍rollup
             const [file, config = {}] = rollupFile;
-            const isTS = ['.ts'].includes(extname(file));
             log.info(`build ${file}`);
             const input = {
-                ...inputOptions(isTS),
-                input: join(dir, file)
+                ...inputOptions(rollupFile),
             };
             const output = {
-                ...outputOptions,
-                file: join(dir, file.replace(/\.(js|ts)$/, '.umd.js')),
-                name: config.name,
+                ...outputOptions(rollupFile),
             }
             if (watch) {
                 const watcher = rollup.watch({
