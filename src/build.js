@@ -106,10 +106,11 @@ function build(dir, opts = {}) {
     function createStream(src) {
         assert(typeof src === 'string', `src for createStream should be string`);
         // 文件流处理
+        // todo ts测试文件
         return vfs.src(
             [
                 src,
-                `!${join(srcDir, '**/*.test.js')}`, // 不包括test文件
+                `!${join(srcDir, 'test/**')}`, // 不包含test文件
             ],
             {
                 allowEmpty: true,
