@@ -170,20 +170,44 @@ function build(dir, opts = {}) {
 
 const args = yParser(process.argv.slice(2));
 const watch = args.w || args.watch;
-
+let specifiedPkg; // 指定要build的包;以,隔开
+if (args.scope) {
+    assert(typeof args.scope === 'string' ,`scope must be string, multi pkg build split with ,`)
+    specifiedPkg = args.scope.split(',').map(_ => _.trim()).filter(_ => _);
+}
 if (isLerna(cwd)) {
     const dirs = readdirSync(join(cwd, 'packages'))
                     .filter(dir => dir.charAt(0) !== '.'); // 不包含.开头的文件
-    pkgCount = dirs.length;
-    dirs.forEach(pkg => {
-        build(
-            `./packages/${pkg}`,
-            {
-                watch, 
-                cwd
+    if (specifiedPkg && specifiedPkg.length) {
+        specifiedPkg = specifiedPkg.filter(pkg => {
+            if (dirs.includes(pkg)) {
+                return true;
             }
-        )
-    })
+            log.warn(`${pkg} doesn't exist in packages`)
+            return false;
+        })
+        pkgCount = specifiedPkg.length;
+        specifiedPkg.forEach(pkg => {
+            build(
+                `./packages/${pkg}`,
+                {
+                    watch,
+                    cwd,
+                }
+            )
+        })
+    } else {
+        pkgCount = dirs.length;
+        dirs.forEach(pkg => {
+            build(
+                `./packages/${pkg}`,
+                {
+                    watch, 
+                    cwd
+                }
+            )
+        })
+    }
 } else {
     pkgCount = 1;
     build(

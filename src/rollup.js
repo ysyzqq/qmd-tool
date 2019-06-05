@@ -28,7 +28,7 @@ function build(dir, opts = {}) {
     const inputOptions =  rollupFile => {
         const [file, config = {}] = rollupFile;
         const isTS = ['.ts'].includes(extname(file));
-        const {commonjs = {}} = config; // 这里有时候会出现cjs解析错误,得自己定义commonjs插件的namedExports
+        const {commonjsConfig = {}} = config; // 这里有时候会出现cjs解析错误,得自己定义commonjs插件的namedExports
         return {
             external: ['react', 'react-dom', ...Object.keys(globals)],
             plugins: [
@@ -39,7 +39,7 @@ function build(dir, opts = {}) {
                     'process.env.NODE_ENV': JSON.stringify(env),
                 }),
                 ...(isTS ? [typescript()] : []),
-                commonjs(commonjs),
+                commonjs(commonjsConfig),
                 postcss({
                     extract: true
                 }),
