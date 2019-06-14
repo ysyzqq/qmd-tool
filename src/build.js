@@ -170,10 +170,14 @@ function build(dir, opts = {}) {
 
 const args = yParser(process.argv.slice(2));
 const watch = args.w || args.watch;
-let specifiedPkg; // 指定要build的包;以,隔开
+let specifiedPkg; // 指定要build的包
 if (args.scope) {
-    assert(typeof args.scope === 'string' ,`scope must be string, multi pkg build split with ,`)
-    specifiedPkg = args.scope.split(',').map(_ => _.trim()).filter(_ => _);
+    specifiedPkg = args.scope;
+    assert(typeof specifiedPkg === 'string' || Array.isArray(specifiedPkg) ,`scope must be string or array`)
+    if (typeof specifiedPkg === 'string') {
+        specifiedPkg = [specifiedPkg];
+    }
+    specifiedPkg = specifiedPkg.map(_ => _.trim()).filter(_ => _);
 }
 if (isLerna(cwd)) {
     const dirs = readdirSync(join(cwd, 'packages'))
