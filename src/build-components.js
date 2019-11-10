@@ -88,8 +88,9 @@ function build(dir, opts = {}) {
                         loader: 'css-loader',
                         options: {
                             sourceMap: true,
-                            modules: true,
-                            localIdentName: '[local].[hash:8]'
+                            modules: { // 适配css-loader2
+                                localIdentName: '[local].[hash:8]'
+                            },
                         }
                     },
                     {
