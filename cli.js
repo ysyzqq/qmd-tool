@@ -14,8 +14,10 @@ if (args.v || args.version) {
 switch(args._[0]) {
     case 'build':
     case 'rollup':
+    case 'build-components':
         require(`./src/${args._}`);
         break;
+        
     default:
         singal.error(`unknown command ${args._}`);
         break;
