@@ -38,8 +38,10 @@ function build(dir, opts = {}) {
             try {
                 //复制
                 const base = basename(path, '.less');
-                const outputDir = `${outputPath}/style`
-                const output = `${outputDir}/${base}`
+                const inputDir = `${inputPath}/style`;
+                const outputDir = `${outputPath}/style`;
+                const output = `${outputDir}/${base}`;
+
                 if (!existsSync(outputDir)) {
                     ensureDirSync(outputDir);
                 }
@@ -52,7 +54,10 @@ function build(dir, opts = {}) {
                 copyFileSync(path, `${output}.less`)
                 //编译为css
                 const lessInputContent = readFileSync(path).toString()
-                less.render(lessInputContent, {}, (err, info) => {
+                less.render(lessInputContent, {
+                    filename: path,
+                    paths: [inputDir], // 查找@import的路径
+                }, (err, info) => {
                     log.success(
                         `
                         less文件: ${path}
