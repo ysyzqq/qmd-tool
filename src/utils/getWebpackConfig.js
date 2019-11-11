@@ -156,6 +156,9 @@ module.exports = function getWebpackConfig(opts = {}) {
         externals: {
             'react': 'react',
             'react-dom': 'react-dom'
+        },
+        resolve: {
+            extensions: ['.js', '.jsx', '.ts', '.tsx']
         }
     }
 }
