@@ -1,6 +1,6 @@
 {
   "name": "qmd-tool",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "The tools used to build with lerna",
   "license": "MIT",
   "bin": {
