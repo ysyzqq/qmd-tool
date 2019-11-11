@@ -53,6 +53,12 @@ function build(dir, opts = {}) {
                 //编译为css
                 const lessInputContent = readFileSync(path).toString()
                 less.render(lessInputContent, {}, (err, info) => {
+                    log.success(
+                        `
+                        less文件: ${path}
+                        编译后: ${info}
+                        `
+                    )
                     if (info && info.css) {
                         const css = info.css;
                         writeFileSync(`${output}.css`, css)
