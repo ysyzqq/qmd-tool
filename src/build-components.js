@@ -2,7 +2,7 @@
 
 const yParser = require('yargs-parser');
 const { join, resolve, extname, basename } = require('path');
-const { existsSync, statSync, readdirSync, copyFileSync, readFileSync, writeFileSync } = require('fs-extra');
+const { existsSync, statSync, readdirSync, copyFileSync, readFileSync, writeFileSync, ensureDirSync } = require('fs-extra');
 const assert = require('assert');
 const execa = require('execa');
 const slash = require('slash2');
@@ -42,13 +42,17 @@ function build(dir, opts = {}) {
             try {
                 //复制
                 const base = basename(path, '.less');
-                const output = `${outputPath}/style/${base}`
+                const outputDir = `${outputPath}/style`
+                const output = `${outputDir}/${base}`
                 log.info(
                     `
                     copy: ${path} -- ${output}.less
-                    destExist: ${existsSync(`${outputPath}/style`)}
+                    destExist: ${existsSync(outputDir)}
                     `
                 )
+                if (!existsSync(outputDir)) {
+                    ensureDirSync(outputDir);
+                }
                 copyFileSync(path, `${output}.less`)
                 log.success('copy完成')
                 //编译为css
