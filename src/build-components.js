@@ -2,13 +2,14 @@
 
 const yParser = require('yargs-parser');
 const { join, resolve, extname, basename } = require('path');
-const { existsSync, statSync, readdirSync, copyFileSync } = require('fs-extra');
+const { existsSync, statSync, readdirSync, copyFileSync, readFileSync, writeFileSync } = require('fs-extra');
 const assert = require('assert');
 const execa = require('execa');
 const slash = require('slash2');
 const chalk = require('chalk');
 const rimraf = require('rimraf');
 const globby = require('globby');
+const less = require('less');
 const webpack = require('webpack');
 const log = require('./utils/log');
 const getWebpackConfig = require('./utils/getWebpackConfig');
@@ -44,7 +45,11 @@ function build(dir, opts = {}) {
                 const output = `${outputPath}/style/${base}`
                 copyFileSync(path, `${output}.less`)
                 //编译为css
-                execa.commandSync(`less ${path} ${output}.css`)
+                const lessInputContent = readFileSync(path).toString()
+                less.render(lessInputContent, {}, (err, info) => {
+                    const css = info.css;
+                    writeFileSync(`${output}.css`, css)
+                })
             } catch (e) {
                 throw (`less处理出错: ${e}`)
             }

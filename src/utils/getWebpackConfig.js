@@ -26,7 +26,6 @@ const BabelOption = {
 module.exports = function getWebpackConfig(opts = {}) {
     const {cwd} = opts;
     return {
-        mode: 'production',
         module: {
             rules: [
                 {
