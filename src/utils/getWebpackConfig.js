@@ -1,26 +1,8 @@
 const {join} = require('path')
 const postcssPresetEnv = require('postcss-preset-env');
+const getBabelConfig = require('./getBabelConfig');
 
-
-const BabelOption = {
-    presets: [
-        [
-            require.resolve('@babel/preset-typescript'), // ts预设
-            {},
-        ],
-        [
-            require.resolve('@babel/preset-env'), // 官方推荐的env预设
-        ],
-        require.resolve('@babel/preset-react')
-        // ...(isBrowser ? [require.resolve('@babel/preset-react')] : []), // 浏览器环境加入react预设
-    ],
-    plugins: [
-        require.resolve('@babel/plugin-proposal-export-default-from'),
-        require.resolve('@babel/plugin-proposal-do-expressions'),
-        require.resolve('@babel/plugin-proposal-class-properties'),
-    ]
-}
-
+const BabelOption = getBabelConfig(true);
 
 
 module.exports = function getWebpackConfig(opts = {}) {

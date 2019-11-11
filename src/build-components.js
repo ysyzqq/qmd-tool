@@ -1,12 +1,8 @@
 //使用webpack对组件进行打包
 
 const yParser = require('yargs-parser');
-const { join, resolve, extname, basename } = require('path');
+const { join, extname, basename } = require('path');
 const { existsSync, statSync, readdirSync, copyFileSync, readFileSync, writeFileSync, ensureDirSync } = require('fs-extra');
-const assert = require('assert');
-const execa = require('execa');
-const slash = require('slash2');
-const chalk = require('chalk');
 const rimraf = require('rimraf');
 const globby = require('globby');
 const less = require('less');
