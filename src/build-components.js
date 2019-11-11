@@ -43,13 +43,22 @@ function build(dir, opts = {}) {
                 //复制
                 const base = basename(path, '.less');
                 const output = `${outputPath}/style/${base}`
+                log.info(
+                    `
+                    copy: ${path} -- ${output}.less
+                    destExist: ${existsSync(`${outputPath}/style`)}
+                    `
+                )
                 copyFileSync(path, `${output}.less`)
+                log.success('copy完成')
                 //编译为css
+                log.pending('转css开始')
                 const lessInputContent = readFileSync(path).toString()
                 less.render(lessInputContent, {}, (err, info) => {
                     const css = info.css;
                     writeFileSync(`${output}.css`, css)
                 })
+                log.success('转css完成')
             } catch (e) {
                 throw (`less处理出错: ${e}`)
             }
