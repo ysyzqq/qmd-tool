@@ -44,25 +44,24 @@ function build(dir, opts = {}) {
                 const base = basename(path, '.less');
                 const outputDir = `${outputPath}/style`
                 const output = `${outputDir}/${base}`
+                if (!existsSync(outputDir)) {
+                    ensureDirSync(outputDir);
+                }
                 log.info(
                     `
                     copy: ${path} -- ${output}.less
                     destExist: ${existsSync(outputDir)}
                     `
                 )
-                if (!existsSync(outputDir)) {
-                    ensureDirSync(outputDir);
-                }
                 copyFileSync(path, `${output}.less`)
-                log.success('copy完成')
                 //编译为css
-                log.pending('转css开始')
                 const lessInputContent = readFileSync(path).toString()
                 less.render(lessInputContent, {}, (err, info) => {
-                    const css = info.css;
-                    writeFileSync(`${output}.css`, css)
+                    if (info && info.css) {
+                        const css = info.css;
+                        writeFileSync(`${output}.css`, css)
+                    }
                 })
-                log.success('转css完成')
             } catch (e) {
                 throw (`less处理出错: ${e}`)
             }
@@ -81,16 +80,14 @@ function build(dir, opts = {}) {
             console.error(err.stack || err);
             return;
         }
+        const info = stats.toJson();
+
+        if (stats.hasErrors()) {
+            console.error(info.errors);
+            return;
+        }
+
         lessHandle()
-        // const info = stats.toJson();
-
-        // if (stats.hasErrors()) {
-        //     console.error(info.errors);
-        // }
-
-        // if (stats.hasWarnings()) {
-        //     console.warn(info.warnings);
-        // }
     })
 }
 
