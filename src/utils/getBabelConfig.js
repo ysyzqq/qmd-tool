@@ -2,7 +2,7 @@
  * 获取 babel配置
  * @param {*} isBrowser 浏览器环境还是node环境
  */
-function getBabelConfig(isBrowser) {
+function getBabelConfig(isBrowser, modules = 'auto') {
     const targets = isBrowser ? {browsers: ['last 2 versions', 'IE 10']} : {node: 6};
     return {
         presets: [
@@ -14,7 +14,7 @@ function getBabelConfig(isBrowser) {
                 require.resolve('@babel/preset-env'), // 官方推荐的env预设
                 {
                   targets,
-                  ...(isBrowser ? { modules: false } : {}),
+                  ...(isBrowser ? { modules: false } : {modules}),
                 },
             ],
             require.resolve('@babel/preset-react')

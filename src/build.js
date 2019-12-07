@@ -22,9 +22,6 @@ let pkgCount = null;
 
 
 
-function addLastSlash(path) {
-    return path.slice(-1) === '/' ? path : `${path}/`;
-}
 
 /**
  * 通过babel编译
@@ -91,7 +88,7 @@ function build(dir, opts = {}) {
         )
         .pipe(
             through.obj((f, env, cb) => { // f是可读流输出的object stream
-                if (['.js', '.ts', '.tsx'].includes(extname(f.path)) && !f.path.includes(`${sep}templates${sep}`)) { // 找到js和ts文件
+                if (['.js', '.jsx', '.ts', '.tsx'].includes(extname(f.path)) && !f.path.includes(`${sep}templates${sep}`)) { // 找到js和ts文件
                     f.contents = Buffer.from(
                         transform({
                             content: f.contents,

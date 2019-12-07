@@ -1,34 +1,54 @@
 //使用webpack对组件进行打包
 
 const yParser = require('yargs-parser');
-const { join, extname, basename } = require('path');
+const { join, extname, basename, sep } = require('path');
 const { existsSync, statSync, readdirSync, copyFileSync, readFileSync, writeFileSync, ensureDirSync } = require('fs-extra');
 const rimraf = require('rimraf');
 const globby = require('globby');
 const less = require('less');
-const webpack = require('webpack');
 const log = require('./utils/log');
-const getWebpackConfig = require('./utils/getWebpackConfig');
 const cwd = process.cwd();
+const assert = require('assert');
+const vfs = require('vinyl-fs');
+const through = require('through2');
+const babel = require('@babel/core');
+const getBabelConfig = require('./utils/getBabelConfig');
+const chalk = require('chalk');
+const slash = require('slash2');
 
+
+/**
+ * 通过babel编译
+ * @param {*} opts 
+ */
+function transform(opts = {}) {
+    const { content, path, root } = opts;
+    assert(content, `opts.content should be supplied for transform()`);
+    assert(path, `opts.path should be supplied for transform()`);
+    assert(root, `opts.root should be supplied for transform()`);
+    assert(['.js', '.ts', '.tsx'].includes(extname(path)), `extname of opts.path should be .js, .ts or .tsx`);
+    
+    // 根据包里的package.json里的qmdTool配置来判断是不是浏览器环境
+    const isBrowser = false;
+    const babelConfig = getBabelConfig(isBrowser, 'umd');
+
+    log.transform(
+        chalk[isBrowser ? 'yellow' : 'blue'](
+          `${slash(path).replace(`${cwd}/`, '')}`,
+        ),
+    );
+    
+    return babel.transform(content, {
+        ...babelConfig,
+        filename: path,
+    }).code;
+}
 
 function build(dir, opts = {}) {
     const { cwd } = opts;
     const inputPath = join(cwd, 'components', dir);
     const outputPath = join(cwd, 'antd', dir);
-    const jsEntries = globby.sync(
-        [
-            `${inputPath}/index.(js|jsx|ts|tsx)`,
-            `!${inputPath}/__tests__`,
-            `!${inputPath}/demo`
-        ],
-        {
 
-        }
-    ).reduce((memo, cur) => {
-        const ext = extname(cur);
-        return { ...memo, [cur.replace(`${inputPath}/`, '').replace(ext, '')]: cur }
-    }, {})
     function lessHandle() {
         globby.sync(
             [
@@ -74,28 +94,47 @@ function build(dir, opts = {}) {
             }
         })
     }
-    const compiler = webpack({
-        ...getWebpackConfig({cwd}),
-        entry: jsEntries,
-        output: {
-            path: outputPath,
-            library: `yui-${dir}`,
-            libraryTarget: 'umd',
-            filename: '[name].js'
-        }
-    });
-    compiler.run((err, stats) => { // Stats Object
-        if (err) {
-            console.error(err.stack || err);
-            return;
-        }
-        const info = stats.toJson();
 
-        if (stats.hasErrors()) {
-            console.error(info.errors);
-            return;
-        }
+    function createStream(src) {
+        assert(typeof src === 'string', `src for createStream should be string`);
+        // 文件流处理
+        // todo ts测试文件
+        return vfs.src(
+            [
+                src,
+                `!${join(inputPath, 'test/**')}`, // 不包含test文件
+            ],
+            {
+                allowEmpty: true,
+                base: inputPath,
+            }
+        )
+        .pipe(
+            through.obj((f, env, cb) => { // f是可读流输出的object stream
+                if (['.js', '.jsx', '.ts', '.tsx'].includes(extname(f.path)) && !f.path.includes(`${sep}templates${sep}`)) { 
+                    // 找到js和ts文件, 不包括模板文件
+                    f.contents = Buffer.from(
+                        transform({
+                            content: f.contents,
+                            path: f.path,
+                            root: join(inputPath),
+                        }),              
+                    );
+                    f.path = f.path.replace(extname(f.path), '.js'); // 全部转换成js文件
+                }
+                cb(null, f); // alternative this.push(data) 写入
+            })
+        )
+        .pipe(
+            vfs.dest(
+                outputPath
+            )
+        )
+    }
 
+    const stream = createStream(join(inputPath, '**/*'))
+
+    stream.on('end', () => {
         lessHandle()
     })
 }
@@ -105,6 +144,7 @@ if (existsSync(componentsDir) && statSync(componentsDir).isDirectory) {
     const components = readdirSync(componentsDir)
         .filter(dir => dir.charAt(0) !== '.'); // 不包含.开头的文件
     rimraf.sync(join(cwd, 'antd'));
+    // 打包单独的组件, 保证组件可以懒加载
     components.forEach(cmp => {
         build(
             `./${cmp}`,
@@ -113,6 +153,7 @@ if (existsSync(componentsDir) && statSync(componentsDir).isDirectory) {
             }
         )
     })
+    // webpack打包index文件, 打出ui库
 } else {
     log.error('components文件夹有误')
 }
