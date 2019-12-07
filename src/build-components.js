@@ -18,7 +18,7 @@ function build(dir, opts = {}) {
     const outputPath = join(cwd, 'antd', dir);
     const jsEntries = globby.sync(
         [
-            `${inputPath}/**/*.(js|jsx|ts|tsx)`,
+            `${inputPath}/index.(js|jsx|ts|tsx)`,
             `!${inputPath}/__tests__`,
             `!${inputPath}/demo`
         ],
@@ -79,7 +79,7 @@ function build(dir, opts = {}) {
         entry: jsEntries,
         output: {
             path: outputPath,
-            library: 'yui',
+            library: `yui-${dir}`,
             libraryTarget: 'umd',
             filename: '[name].js'
         }
