@@ -18,7 +18,7 @@ function build(dir, opts = {}) {
     const outputPath = join(cwd, 'antd', dir);
     const jsEntries = globby.sync(
         [
-            `${inputPath}/index.(js|jsx|ts|tsx)`, // 只编译入口文件
+            `${inputPath}/**/*.(js|jsx|ts|tsx)`,
             `!${inputPath}/__tests__`,
             `!${inputPath}/demo`
         ],
