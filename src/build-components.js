@@ -28,9 +28,8 @@ function transform(opts = {}) {
     assert(root, `opts.root should be supplied for transform()`);
     assert(['.js', '.ts', '.tsx'].includes(extname(path)), `extname of opts.path should be .js, .ts or .tsx`);
     
-    // 根据包里的package.json里的qmdTool配置来判断是不是浏览器环境
-    const isBrowser = false;
-    const babelConfig = getBabelConfig(isBrowser, 'umd');
+    const isBrowser = true;
+    const babelConfig = getBabelConfig(isBrowser);
 
     log.transform(
         chalk[isBrowser ? 'yellow' : 'blue'](
